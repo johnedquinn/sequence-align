@@ -48,6 +48,7 @@ if __name__ == '__main__':
 
 	# Specify Command Location
 	t.specify_file('./swaligntool', 'swaligntool', WORK_QUEUE_INPUT, cache=True)
+	t.specify_file('./swalign', 'swalign', WORK_QUEUE_INPUT, cache=True)
 
 	# Specify Files
 	t.specify_file(infile, infile, WORK_QUEUE_INPUT, cache=False)
