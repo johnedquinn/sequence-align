@@ -9,6 +9,9 @@
 
 import sys
 import os
+import random
+import string
+import shutil
 from work_queue import *
 
 
@@ -36,28 +39,51 @@ if __name__ == '__main__':
 	# Print Port Information
 	print('Listening on port %d...' % q.port)
 
+	# Create Workspace
+	base_dir = os.path.abspath('.')
+	identifier = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+	workspace = f'{base_dir}/{identifier}'
+	os.mkdir(workspace)
+
 	# Grab Input File
 	infile = "%s" % sys.argv[1]
-	infile1 = 'two-items.fasta'
-	outfile = 'output.txt'
+	print("Infile: " + infile)
+	count = len(open(infile).readlines())
+	print("Count: " + str(count))
 
-	# Command to Run
-	command = "./swaligntool %s %s > %s" % (infile, infile1, outfile)
+	# Check if Multiple Sequences
+	if count < 2:
+		print('No sequences to compare')
+		sys.exit(1)
 
-	t = Task(command)
+	# Compare All Sequences (But Don't Duplicate Compares)
+	for i in range(1, count - 2, 2):
 
-	# Specify Command Location
-	t.specify_file('./swaligntool', 'swaligntool', WORK_QUEUE_INPUT, cache=True)
-	t.specify_file('./swalign', 'swalign', WORK_QUEUE_INPUT, cache=True)
+		# Create File Names
+		in1  = f'in_{i:03d}.fasta'
+		in2  = f'in_{i+1:03d}.fasta'
+		out1 = f'out_{i:03d}.txt'
 
-	# Specify Files
-	t.specify_file(infile, infile, WORK_QUEUE_INPUT, cache=False)
-	t.specify_file(infile1, infile1, WORK_QUEUE_INPUT, cache=True)
-	t.specify_file(outfile, outfile, WORK_QUEUE_OUTPUT, cache=False)
+		# Generate Files
+		os.system(f'sed -n \'{i},{i+1}p;{i+2}q\' {infile} > {workspace}/{in1}')
+		os.system(f'sed -n \'{i+2},{count}p\' {infile} > {workspace}/{in2}')
 
-	# Submit Task
-	taskid = q.submit(t)
-	print("submitted task (id# %d): %s" % (taskid, t.command))
+		# Create Task
+		command = "./swaligntool %s %s > %s" % (in1, in2, out1)
+		t = Task(command)
+
+		# Specify Command Location
+		t.specify_file('./swaligntool', 'swaligntool', WORK_QUEUE_INPUT, cache=True)
+		t.specify_file('./swalign', 'swalign', WORK_QUEUE_INPUT, cache=True)
+
+		# Specify Files
+		t.specify_file(f'{workspace}/{in1}', in1, WORK_QUEUE_INPUT, cache=False)
+		t.specify_file(f'{workspace}/{in2}', in2, WORK_QUEUE_INPUT, cache=False)
+		t.specify_file(f'{workspace}/{out1}', out1, WORK_QUEUE_OUTPUT, cache=False)
+
+		# Submit Task
+		taskid = q.submit(t)
+		print("submitted task (id# %d): %s" % (taskid, t.command))
 
 	print("waiting for tasks to complete...")
 	while not q.empty():
@@ -73,4 +99,5 @@ if __name__ == '__main__':
 	print("all tasks complete!")
 
 	#work queue object will be garbage collected by Python automatically when it goes out of scope
+	shutil.rmtree(workspace)
 	sys.exit(0)
