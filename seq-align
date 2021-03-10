@@ -21,6 +21,16 @@ def usage(code=0):
 	print('Usage: {} INPUT_FILE (.fasta)'.format(os.path.basename(sys.argv[0])))
 	sys.exit(code)
 
+def addContentsToList(fpath, l):
+	f = open(fpath)
+	query = f.readline().rstrip()
+	while query:
+		ref = f.readline().rstrip()
+		score = f.readline().rstrip()
+		l.append((score, query, ref))
+		query = f.readline().rstrip()
+	f.close()
+
 ### Main Execution ###
 
 if __name__ == '__main__':
@@ -99,11 +109,23 @@ if __name__ == '__main__':
 			if t.return_status != 0:
 				print(f'Task #{t.id} FAILED with return code {t.return_status}')
 
-	# @FIXME:
-	# scores.sort(key=lambda score: score[0])
+	# Grab Scores
+	scores = []
+	for fname in os.listdir(workspace):
+		addContentsToList(workspace + '/' + fname, scores)
 
-	print("all tasks complete!")
+	# Sort Scores
+	scores.sort(key=lambda score: score[0], reverse=True)
 
-	# @TODO: Do I need a workspace? AKA do I add to scores list in WHILE or do I need to traverse DIR to open each output file to append to scores?
+	# Print Scores
+	printAmount = min(10, len(scores))
+	print('Top Ten Matches:')
+	for i in range(printAmount):
+		score = scores[i][0]
+		query = scores[i][1]
+		ref = scores[i][2]
+		print(f'{i}: sequence {query} matches {ref} with a score of {score}')
+
+	# Remove Output Files
 	shutil.rmtree(workspace)
 	sys.exit(0)
