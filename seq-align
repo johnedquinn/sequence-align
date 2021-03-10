@@ -99,13 +99,10 @@ if __name__ == '__main__':
 
 		# Submit Task
 		taskid = q.submit(t)
-		print("submitted task (id# %d): %s" % (taskid, t.command))
 
-	print("waiting for tasks to complete...")
 	while not q.empty():
 		t = q.wait(5)
 		if t:
-			print("task (id# %d) (return code %d)" % (t.id, t.return_status))
 			if t.return_status != 0:
 				print(f'Task #{t.id} FAILED with return code {t.return_status}')
 
