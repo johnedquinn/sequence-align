@@ -46,39 +46,45 @@ if __name__ == '__main__':
 	os.mkdir(workspace)
 
 	# Grab Input File
-	infile = "%s" % sys.argv[1]
-	print("Infile: " + infile)
+	infile = sys.argv[1]
 	count = len(open(infile).readlines())
-	print("Count: " + str(count))
 
 	# Check if Multiple Sequences
 	if count < 2:
 		print('No sequences to compare')
 		sys.exit(1)
 
+	# Find Path for Command 'sed'
+	sed_path = '/bin/sed'
+	if not os.path.exists(sed_path):
+		sed_path = '/usr/bin/sed'
+	if not os.path.exists(sed_path):
+		print('Could not find program sed. Looked in \'/bin/sed\' and \'/usr/bin/sed\'')
+		sys.exit(1);
+
 	# Compare All Sequences (But Don't Duplicate Compares)
 	for i in range(1, count - 2, 2):
 
-		# Create File Names
+		# Create File Names for Worker-Side
 		in1  = f'in_{i:03d}.fasta'
 		in2  = f'in_{i+1:03d}.fasta'
 		out1 = f'out_{i:03d}.txt'
 
-		# Generate Files
-		os.system(f'sed -n \'{i},{i+1}p;{i+2}q\' {infile} > {workspace}/{in1}')
-		os.system(f'sed -n \'{i+2},{count}p\' {infile} > {workspace}/{in2}')
-
-		# Create Task
-		command = "./swaligntool %s %s > %s" % (in1, in2, out1)
+		# Create Task for Worker
+		command = f'./sed -n \'{i},{i+1}p;{i+2}q\' {infile} > {in1}'
+		command += f' && ./sed -n \'{i+2},{count}p\' {infile} > {in2}'
+		command += f' && ./swaligntool {in1} {in2} | ./sed -n '
+		command += f'\'s/^Query: \([0-9]\+[^ ]\)\s\+([^)]*)\|^Ref  : \([0-9]\+[^ ]\)\s\+([^)]*)\|^Score: \([0-9]\+[^ ]\)/\\1\\2\\3/p\''
+		command += f' > {out1}'
 		t = Task(command)
 
 		# Specify Command Location
 		t.specify_file('./swaligntool', 'swaligntool', WORK_QUEUE_INPUT, cache=True)
 		t.specify_file('./swalign', 'swalign', WORK_QUEUE_INPUT, cache=True)
+		t.specify_file(sed_path, 'sed', WORK_QUEUE_INPUT, cache=True)
 
 		# Specify Files
-		t.specify_file(f'{workspace}/{in1}', in1, WORK_QUEUE_INPUT, cache=False)
-		t.specify_file(f'{workspace}/{in2}', in2, WORK_QUEUE_INPUT, cache=False)
+		t.specify_file(infile, infile, WORK_QUEUE_INPUT, cache=False)
 		t.specify_file(f'{workspace}/{out1}', out1, WORK_QUEUE_OUTPUT, cache=False)
 
 		# Submit Task
@@ -89,15 +95,15 @@ if __name__ == '__main__':
 	while not q.empty():
 		t = q.wait(5)
 		if t:
-			print("task (id# %d) complete: %s (return code %d)" % (t.id, t.command, t.return_status))
-			print('t->output = %s' % t.output)
+			print("task (id# %d) (return code %d)" % (t.id, t.return_status))
 			if t.return_status != 0:
-			# The task failed. Error handling (e.g., resubmit with new parameters, examine logs, etc.) here
-				None
-			#task object will be garbage collected by Python automatically when it goes out of scope
+				print(f'Task #{t.id} FAILED with return code {t.return_status}')
+
+	# @FIXME:
+	# scores.sort(key=lambda score: score[0])
 
 	print("all tasks complete!")
 
-	#work queue object will be garbage collected by Python automatically when it goes out of scope
+	# @TODO: Do I need a workspace? AKA do I add to scores list in WHILE or do I need to traverse DIR to open each output file to append to scores?
 	shutil.rmtree(workspace)
 	sys.exit(0)
