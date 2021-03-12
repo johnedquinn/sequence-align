@@ -26,7 +26,7 @@ $ ./seq-align ./data/agambiae.small.fasta
 
 ## Program Output
 - Below is the output obtained by the program (with input `data/agambiae.small.fasta`)
-```console
+```txt
 Top Ten Matches:
 1: sequence 1102140176186 matches 1102140143903 with a score of 1539
 2: sequence 1102140177183 matches 1102140177182 with a score of 874
