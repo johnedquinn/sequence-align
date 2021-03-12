@@ -1,7 +1,16 @@
 # Sequence Align
 
 ## Description
-Project to compare DNA sequences of Anopheles Gambiae (common mosquito).
+Project to perform sequence alignment of short DNA sequences of Anopheles Gambiae (common mosquito). This implementation leverages distributed computing through the HTCondor and Work Queue systems to drastically improve the computational runtime. The tool utilized to compute scores of DNA comparisos is `swaligntool`, installed below.
+
+## Installation
+- This program requires Python 3. The machine tested uses Python 3.6.8.
+- This program requires the installation and setup of HTCondor and Work Queue
+- An installation of the `swaligntool` and `swalign` python libraries are needed:
+```console
+$ wget http://sakailogin.nd.edu/access/content/group/SP21-CSE-40822-CX-01/a3-1/swaligntool.tar.gz
+```
+- Unpack `swaligntool.tar.gz` and place within the project's root directory
 
 ## To Run
 ```console
