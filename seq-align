@@ -84,7 +84,7 @@ if __name__ == '__main__':
 		command = f'./sed -n \'{i},{i+1}p;{i+2}q\' {infile} > {in1}'
 		command += f' && ./sed -n \'{i+2},{count}p\' {infile} > {in2}'
 		command += f' && ./swaligntool {in1} {in2} | ./sed -n '
-		command += f'"s/^Query: \([0-9]\+[^ ]\)\s\+.\+\|^Ref  : \([0-9]\+[^\s]\)\s\+.\+\|^Score: \([0-9]\+[^\s]\)/\\1\\2\\3/p"'
+		command += f'"s/^Query: \([0-9]\+[^\s]\)\s\+(.\+\|^Ref  : \([0-9]\+[^\s]\)\s\+(.\+\|^Score: \([0-9]\+[^\s]\)/\\1\\2\\3/p"'
 		command += f' > {out1}'
 		t = Task(command)
 
@@ -121,8 +121,8 @@ if __name__ == '__main__':
 		score = scores[i][0]
 		query = scores[i][1]
 		ref = scores[i][2]
-		print(f'{i}: sequence {query} matches {ref} with a score of {score}')
+		print(f'{i+1}: sequence {query} matches {ref} with a score of {score}')
 
 	# Remove Output Files
-	# shutil.rmtree(workspace)
+	shutil.rmtree(workspace)
 	sys.exit(0)
