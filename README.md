@@ -1,7 +1,7 @@
 # Sequence Align
 
 ## Description
-Project to perform sequence alignment of short DNA sequences of Anopheles Gambiae (common mosquito). This implementation leverages distributed computing through the HTCondor and Work Queue systems to drastically improve the computational runtime. The tool utilized to compute scores of DNA comparisos is `swaligntool`, installed below.
+Project to perform sequence alignment of short DNA sequences of Anopheles Gambiae (common mosquito). This implementation leverages distributed computing through the HTCondor and Work Queue systems to drastically improve the computational runtime. The tool utilized to compute scores of DNA comparisons is `swaligntool`, installed below.
 
 ## Installation
 - This program requires Python 3. The machine tested uses Python 3.6.8.
@@ -67,4 +67,3 @@ Below can be found the performance results obtained. Speedup and efficiency were
 	- I utilized pipes within each worker to minimize the output of `swaligntool` (which has the default setting to writing to stdout). This alone would usually not matter, but in comparison with the paralled execution, the sequential execution takes a huge hit by writing to stdout.
 	- I defined the `agambiae.small.fasta` file to be cached within the shared space of the workers. This allows each process to pipe simultaneously as none of them are writing to the input file.
 	- The machine (disc01.crc.nd.edu) running the sequential computation of `swaligntool` (for the Sequential Time Estimate) is a different architecture than the machines within the Condor Pool at Notre Dame. This means different processors/memory with different amount of users utilizing the machine's resources.
-
